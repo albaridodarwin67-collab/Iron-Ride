@@ -11,8 +11,8 @@
 <nav>
     <div class="logo">IRONRIDE</div>
     
-    <div class="search-container" style="margin-left: 20px;">
-        <input type="text" id="shopSearch" placeholder="Search parts..." style="padding: 8px; border-radius: 5px; border: none; background: #222; color: white;">
+    <div class="search-container">
+        <input type="text" id="shopSearch" placeholder="Search parts...">
     </div>
 
     <div class="menu">
@@ -25,6 +25,10 @@
 
 <main class="container">
     <h2 class="section-title">High-Performance Inventory</h2>
+
+    <h3 id="noResults" style="display: none; text-align: center; color: #ff4d4d; margin-top: 50px;">
+        🚫 No parts found in the garage. Try another search!
+    </h3>
     
     <div class="product-grid">
         <div class="card">
@@ -107,6 +111,19 @@
     </div>
 </main>
 
+<div id="cartSidebar" style="position: fixed; right: -400px; top: 0; width: 350px; height: 100%; background: #1a1a1a; border-left: 2px solid #ff4d4d; z-index: 2000; transition: 0.4s; padding: 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);">
+    <h2 style="color: #ff4d4d; border-bottom: 1px solid #333; padding-bottom: 10px; font-family: Arial;">Your Garage</h2>
+    <div id="cartItems" style="margin-top: 20px; max-height: 70vh; overflow-y: auto;">
+        </div>
+    <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: #111;">
+        <h3 style="display: flex; justify-content: space-between; color: white;">Total: <span id="cartTotal">₱0</span></h3>
+        <button id="checkoutBtn" class="glow-button" style="width: 100%; margin-top: 10px; cursor: pointer;">Proceed to Checkout</button>
+        <button onclick="toggleCart()" style="width: 100%; margin-top: 10px; background: transparent; color: #888; border: none; cursor: pointer;">Close Garage</button>
+    </div>
+</div>
+
+<button onclick="toggleCart()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: #ff4d4d; border: none; color: white; font-size: 24px; cursor: pointer; z-index: 1500; box-shadow: 0 0 20px rgba(255,77,77,0.4);">🛒</button>
+
 <footer>
     <p>© 2026 IronRide Motorcycle Parts</p>
 </footer>
@@ -114,41 +131,90 @@
 <script>
     const searchInput = document.getElementById('shopSearch');
     const cards = document.querySelectorAll('.card');
+    const noResults = document.getElementById('noResults');
+    const cartSidebar = document.getElementById('cartSidebar');
+    const cartItemsContainer = document.getElementById('cartItems');
+    const cartTotalDisplay = document.getElementById('cartTotal');
+    
+    let cart = [];
+    let total = 0;
 
-    // THE FILTER FUNCTION
+    // --- SEARCH LOGIC ---
     function runSearch(word) {
+        let foundCount = 0;
         cards.forEach(card => {
             const productName = card.querySelector('h3').textContent.toLowerCase();
-            
-            // If the name contains the search word, show it. Otherwise, hide it.
             if (productName.includes(word.toLowerCase())) {
                 card.style.display = "block";
+                foundCount++;
             } else {
                 card.style.display = "none";
             }
         });
+        noResults.style.display = (foundCount === 0) ? "block" : "none";
     }
 
-    // A. Logic for when you are ALREADY on the shop page and typing
-    searchInput.addEventListener('input', (e) => {
-        runSearch(e.target.value);
+    searchInput.addEventListener('input', (e) => runSearch(e.target.value));
+
+    // --- CART LOGIC ---
+    function toggleCart() {
+        const currentRight = cartSidebar.style.right;
+        cartSidebar.style.right = (currentRight === "0px") ? "-400px" : "0px";
+    }
+
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const card = e.target.closest('.card');
+            const name = card.querySelector('h3').textContent;
+            const priceText = card.querySelector('.price').textContent.replace(/[₱,]/g, '');
+            const price = parseInt(priceText);
+
+            cart.push({ name, price });
+            updateCartUI();
+            
+            if(cartSidebar.style.right !== "0px") toggleCart();
+        });
     });
 
-    // B. Logic for when you JUST ARRIVED from the Home page
+    function updateCartUI() {
+        cartItemsContainer.innerHTML = '';
+        total = 0;
+
+        cart.forEach((item) => {
+            total += item.price;
+            const itemDiv = document.createElement('div');
+            itemDiv.style.cssText = "display: flex; justify-content: space-between; margin-bottom: 15px; background: #222; padding: 10px; border-radius: 5px; color: white;";
+            itemDiv.innerHTML = `<span>${item.name}</span><span style="color: #ff4d4d;">₱${item.price.toLocaleString()}</span>`;
+            cartItemsContainer.appendChild(itemDiv);
+        });
+
+        cartTotalDisplay.textContent = `₱${total.toLocaleString()}`;
+    }
+
+    // --- CHECKOUT LOGIC ---
+    document.getElementById('checkoutBtn').addEventListener('click', () => {
+        if (cart.length === 0) {
+            alert("Your garage is empty!");
+            return;
+        }
+
+        alert(`✅ Checkout Successful!\n\nYour items have been processed.\nTotal Payment: ₱${total.toLocaleString()}\n\nThank you for riding with IronRide!`);
+        
+        cart = [];
+        updateCartUI();
+        toggleCart();
+    });
+
+    // Handle URL search from Home page
     window.addEventListener('load', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const itemFromHome = urlParams.get('item'); // Looks for "?item=" in URL
-        
+        const itemFromHome = urlParams.get('item');
         if (itemFromHome) {
-            searchInput.value = itemFromHome; // Puts the word in the box
-            runSearch(itemFromHome);          // Filters the list immediately
+            searchInput.value = itemFromHome;
+            runSearch(itemFromHome);
         }
     });
-
-    // Your existing Add to Cart alert
-    document.querySelectorAll('.add-to-cart').forEach(btn => {
-        btn.addEventListener('click', () => alert("Part added to your garage!"));
-    });
 </script>
+
 </body>
 </html>
