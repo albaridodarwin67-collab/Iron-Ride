@@ -115,11 +115,13 @@
     const searchInput = document.getElementById('shopSearch');
     const cards = document.querySelectorAll('.card');
 
-    // FUNCTION: Filters the items
-    function filterItems(query) {
+    // THE FILTER FUNCTION
+    function runSearch(word) {
         cards.forEach(card => {
-            const title = card.querySelector('h3').textContent.toLowerCase();
-            if (title.includes(query)) {
+            const productName = card.querySelector('h3').textContent.toLowerCase();
+            
+            // If the name contains the search word, show it. Otherwise, hide it.
+            if (productName.includes(word.toLowerCase())) {
                 card.style.display = "block";
             } else {
                 card.style.display = "none";
@@ -127,28 +129,25 @@
         });
     }
 
-    // A. Handle typing while already on the Shop page
+    // A. Logic for when you are ALREADY on the shop page and typing
     searchInput.addEventListener('input', (e) => {
-        filterItems(e.target.value.toLowerCase());
+        runSearch(e.target.value);
     });
 
-    // B. Handle search coming from the Home page (URL Check)
+    // B. Logic for when you JUST ARRIVED from the Home page
     window.addEventListener('load', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const searchQuery = urlParams.get('search');
+        const itemFromHome = urlParams.get('item'); // Looks for "?item=" in URL
         
-        if (searchQuery) {
-            searchInput.value = searchQuery; // Put the word in the search bar
-            filterItems(searchQuery.toLowerCase()); // Filter the items immediately
+        if (itemFromHome) {
+            searchInput.value = itemFromHome; // Puts the word in the box
+            runSearch(itemFromHome);          // Filters the list immediately
         }
     });
 
-    // Add to cart alert
-    const buttons = document.querySelectorAll('.add-to-cart');
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            alert("Part added to your garage!");
-        });
+    // Your existing Add to Cart alert
+    document.querySelectorAll('.add-to-cart').forEach(btn => {
+        btn.addEventListener('click', () => alert("Part added to your garage!"));
     });
 </script>
 </body>
