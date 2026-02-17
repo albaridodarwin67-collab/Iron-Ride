@@ -94,12 +94,14 @@
 <script>
     const searchInput = document.getElementById('shopSearch');
 
-    // When the user presses "Enter" in the search bar
+    // This listens for the "Enter" key
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            const query = e.target.value.toLowerCase();
-            // Redirect to shop.html and pass the search term in the URL
-            window.location.href = `shop.html?search=${query}`;
+            const query = e.target.value.toLowerCase().trim();
+            if (query !== "") {
+                // This sends you to shop.html?item=brembo
+                window.location.href = `shop.html?item=${query}`;
+            }
         }
     });
 </script>
