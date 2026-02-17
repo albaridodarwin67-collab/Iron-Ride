@@ -112,26 +112,38 @@
 </footer>
 
 <script>
-    // 1. SEARCH LOGIC
-    const searchBar = document.getElementById('shopSearch');
-    
-    searchBar.addEventListener('keyup', (e) => {
-        const searchText = e.target.value.toLowerCase();
-        const allCards = document.querySelectorAll('.card');
+    const searchInput = document.getElementById('shopSearch');
+    const cards = document.querySelectorAll('.card');
 
-        allCards.forEach(card => {
-            const productName = card.querySelector('h3').textContent.toLowerCase();
-            
-            // If the name matches what you type, show it. Otherwise, hide it.
-            if (productName.includes(searchText)) {
-                card.style.display = 'block';
+    // FUNCTION: Filters the items
+    function filterItems(query) {
+        cards.forEach(card => {
+            const title = card.querySelector('h3').textContent.toLowerCase();
+            if (title.includes(query)) {
+                card.style.display = "block";
             } else {
-                card.style.display = 'none';
+                card.style.display = "none";
             }
         });
+    }
+
+    // A. Handle typing while already on the Shop page
+    searchInput.addEventListener('input', (e) => {
+        filterItems(e.target.value.toLowerCase());
     });
 
-    // 2. ADD TO CART LOGIC
+    // B. Handle search coming from the Home page (URL Check)
+    window.addEventListener('load', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchQuery = urlParams.get('search');
+        
+        if (searchQuery) {
+            searchInput.value = searchQuery; // Put the word in the search bar
+            filterItems(searchQuery.toLowerCase()); // Filter the items immediately
+        }
+    });
+
+    // Add to cart alert
     const buttons = document.querySelectorAll('.add-to-cart');
     buttons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -139,6 +151,5 @@
         });
     });
 </script>
-
 </body>
 </html>
