@@ -22,7 +22,10 @@
 </nav>
 
 <main class="container">
-    <h2 class="section-title">High-Performance Inventory</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 40px;">
+        <h2 class="section-title">High-Performance Inventory</h2>
+        <button id="backToShop" style="display: none; padding: 10px 20px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer;">← Back to Shop</button>
+    </div>
     
     <h3 id="noResults" style="display: none; text-align: center; color: #ff4d4d; margin-top: 50px;">
         🚫 No parts found in the garage. Try another search!
@@ -60,14 +63,6 @@
         </div>
 
         <div class="card">
-            <div class="badge">Trending</div>
-            <img src="mags.png" alt="Mags">
-            <h3>Mags raizen</h3>
-            <p class="price">₱10,500</p>
-            <button class="add-to-cart">Add to Cart</button>
-        </div>
-
-        <div class="card">
             <img src="caliper.jpeg" alt="caliper">
             <h3>Brembo 4pot</h3>
             <p class="price">₱70,000</p>
@@ -95,16 +90,12 @@
             <span style="color: #888; font-weight: bold;">TOTAL:</span>
             <span id="cartTotal" style="color: #ff4d4d; font-size: 1.5rem; font-weight: bold;">₱0</span>
         </div>
-        <button id="finalCheckoutBtn" class="glow-button" style="width: 100%; cursor: pointer; border: none;">Proceed to Checkout</button>
+        <button id="finalCheckoutBtn" class="glow-button" style="width: 100%; cursor: pointer; border: none;">Finalize Checkout</button>
         <button onclick="toggleCart()" style="width: 100%; margin-top: 10px; background: transparent; color: #666; border: none; cursor: pointer;">Close</button>
     </div>
 </div>
 
 <button onclick="toggleCart()" style="position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; border-radius: 50%; background: #ff4d4d; border: none; color: white; font-size: 26px; cursor: pointer; z-index: 1500; box-shadow: 0 4px 15px rgba(255,77,77,0.4);">🛒</button>
-
-<footer>
-    <p>© 2026 IronRide Motorcycle Parts</p>
-</footer>
 
 <script>
     let cart = [];
@@ -113,14 +104,14 @@
     const cartTotalDisplay = document.getElementById('cartTotal');
     const searchInput = document.getElementById('shopSearch');
     const cards = document.querySelectorAll('.card');
+    const backBtn = document.getElementById('backToShop');
 
-    // 1. Sidebar Toggle
     function toggleCart() {
         const currentRight = cartSidebar.style.right;
         cartSidebar.style.right = (currentRight === "0px") ? "-400px" : "0px";
     }
 
-    // 2. Add to Cart (LISTING ONLY)
+    // ADD TO CART WITH STATUS CHANGE
     document.querySelectorAll('.add-to-cart').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const card = e.target.closest('.card');
@@ -128,15 +119,19 @@
             const price = parseInt(card.querySelector('.price').textContent.replace(/[₱,]/g, ''));
 
             cart.push({ name, price });
+            
+            // UI CHANGE: Item is in cart
+            e.target.innerText = "✓ In Cart";
+            e.target.style.background = "#28a745"; // Green color
+            e.target.style.borderColor = "#28a745";
+
             updateCartUI();
         });
     });
 
-    // 3. Update Cart List & Total
     function updateCartUI() {
         cartItemsList.innerHTML = '';
         let total = 0;
-
         if (cart.length === 0) {
             cartItemsList.innerHTML = '<p style="color: #555; text-align: center; margin-top: 40px;">Your garage is empty.</p>';
         } else {
@@ -146,10 +141,10 @@
                 div.style.cssText = "background: #222; padding: 12px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #ff4d4d; display: flex; justify-content: space-between; align-items: center;";
                 div.innerHTML = `
                     <div style="flex: 1;">
-                        <span style="display: block; font-weight: bold; font-size: 0.9rem;">${item.name}</span>
+                        <span style="display: block; font-weight: bold; font-size: 0.9rem; color: white;">${item.name}</span>
                         <span style="color: #ff4d4d;">₱${item.price.toLocaleString()}</span>
                     </div>
-                    <button onclick="removeItem(${index})" style="background: none; border: none; color: #555; cursor: pointer; font-size: 1.2rem;">&times;</button>
+                    <button onclick="removeItem(${index})" style="background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 1.2rem;">&times;</button>
                 `;
                 cartItemsList.appendChild(div);
             });
@@ -157,29 +152,41 @@
         cartTotalDisplay.textContent = `₱${total.toLocaleString()}`;
     }
 
-    // 4. Remove Item
     function removeItem(index) {
+        const removedItemName = cart[index].name;
         cart.splice(index, 1);
+        
+        // Reset the button on the card if removed from cart
+        document.querySelectorAll('.card').forEach(card => {
+            if(card.querySelector('h3').innerText === removedItemName) {
+                const btn = card.querySelector('.add-to-cart');
+                btn.innerText = "Add to Cart";
+                btn.style.background = ""; // Resets to CSS default
+                btn.style.borderColor = "";
+            }
+        });
+
         updateCartUI();
     }
 
-    // 5. Final Checkout Message
     document.getElementById('finalCheckoutBtn').addEventListener('click', () => {
-        if (cart.length === 0) {
-            alert("Your garage is empty!");
-            return;
-        }
-        const finalTotal = cartTotalDisplay.textContent;
-        alert(`your items already check out\nTotal Payment: ${finalTotal}`);
-        
+        if (cart.length === 0) return alert("Your garage is empty!");
+        alert(`your items already check out\nTotal Payment: ${cartTotalDisplay.textContent}`);
         cart = [];
         updateCartUI();
         toggleCart();
+        // Reset all buttons
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+            btn.innerText = "Add to Cart";
+            btn.style.background = "";
+        });
     });
 
-    // 6. Search Functionality
+    // SEARCH & BACK BUTTON LOGIC
     function runSearch(word) {
         let count = 0;
+        backBtn.style.display = (word.length > 0) ? "block" : "none"; // Show back button when searching
+        
         cards.forEach(card => {
             const title = card.querySelector('h3').textContent.toLowerCase();
             if (title.includes(word.toLowerCase())) {
@@ -194,14 +201,16 @@
 
     searchInput.addEventListener('input', (e) => runSearch(e.target.value));
 
-    // Initial load check for search from Home
+    // CLICK BACK BUTTON: Clears search and shows all
+    backBtn.addEventListener('click', () => {
+        searchInput.value = "";
+        runSearch("");
+    });
+
     window.addEventListener('load', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const item = urlParams.get('item');
-        if (item) {
-            searchInput.value = item;
-            runSearch(item);
-        }
+        if (item) { searchInput.value = item; runSearch(item); }
     });
 </script>
 
